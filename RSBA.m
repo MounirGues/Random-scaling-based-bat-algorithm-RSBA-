@@ -3,16 +3,15 @@ clear
 
 disp('********* optimization has started ************')
 
+%Greenhouse climate datasets:::
 load('1-  TinM days23 SIMUL Chi=5.2 [5.8 5.3 1.7 2.2].mat')
-
 load('DayN-2-3.mat')
 % load('DayN-3-4.mat')
 % load('DayN-4-5.mat')
-
 load('DB5Days.mat')
-
 DayNX=DayN23;
 
+%Bat algorithm control parameters:::::
 n=100;         % Population size, typically 10 to 40
 % A=0.25;      % Loudness  (constant or decreasing)
 % r=0.5;      % Pulse rate (constant or decreasing)
@@ -39,21 +38,14 @@ alpha=0.9;              %constant for loudness update
 gamma=0.9;              %constant for emission rate update
 r0=0.3;
 
+%Online plotting parameters::::
 p=20;
 po=-1;
 pp=1;
 Particles=cell(1,10);
 RE=cell(1,10);
 
-% Max_iterations=501;
-% inertia_min=0.000001;
-% inertia_max=0.1;
-% eps_max=0.1;
-
-%paper 1 [5.8 5.3 1.7 2.2]***
-%paper 2 [3.9 4.7 2.3 1.5]
-
-% %     1   2      4    5    6            7    8         9   10           11       12   13 
+%Upper and lower search boundaries - Search space for each unknown parameter::::
 z=100;
 Lb=[  0     0    0   0];
 Ub=[  z     z    z   z];
@@ -65,13 +57,15 @@ for i=1:n
     %%%%%%% Test%%%%%%%%
     Fitness(i)=FunDB(Sol(i,:),DayNX,DB5Days,TinM);
     %%%%%%%%%%%%%%%%%%%%
-
 end
+
 % find the current best
 [fmin,I]=min(Fitness);
 best =Sol(I,:);
+
 % start the iterations
 while (N_iter<501)
+
 % loop over all bats solutions
 for i=1:n    
     Q(i)=Qmin+(Qmax-Qmin)*rand;
@@ -88,19 +82,19 @@ for i=1:n
         %%%%%%%%%%%%%%%%%%%%%%
         S(i,:)=Sol(i,:)+v(i,:);  % Xi the new positions (solutions)
         %%%%%%%%%%%%%%%%%%%%%%
-%     for j=1:length(Lb) 
-%         if S(i,j)>Ub(j)
-%            S(i,j)=Lb(j)+(Ub(j)-Lb(j)).*rand.*0.1; 
-%         elseif S(i,j)<Lb(j)
-%            S(i,j)=Lb(j)+(Ub(j)-Lb(j)).*rand.*0.1;
-%         end
-%     end
+        
+% Keep the new values inside the search space::::
+     for j=1:length(Lb) 
+         if S(i,j)>Ub(j)
+            S(i,j)=Lb(j)+(Ub(j)-Lb(j)).*rand.*0.1; 
+         elseif S(i,j)<Lb(j)
+            S(i,j)=Lb(j)+(Ub(j)-Lb(j)).*rand.*0.1;
+         end
+     end
 
 % If bat's pulse emission increased, a solution exists  
     if rand>r
-%         eps_max=(0.01+(0.15-(0.01))*rand);
-
-        eps=0.0000001+(0.01-(0.0000001))*rand; %Parameter Randomization
+        eps=0.0000001+(0.01-(0.0000001))*rand; %Parameter Randomization using a very small low and upper boundaries (it depends on the nature of the unknown parameters) for the scaling parameter (eps)
         S(i,:)=best+eps*randn(1,d);
     end
 %     evaluate new solutions
